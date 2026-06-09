@@ -76,11 +76,10 @@
                     @foreach ($sessions as $session)
                         @php
                             $sessionTime = $session['created_at'];
-                            $totalDelta = $session['total_increase'] + $session['total_decrease'];
                         @endphp
                         <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
-                            <!-- Session header -->
-                            <div class="px-5 py-4 border-b border-gray-100 bg-indigo-50/50 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                            <!-- Session header (click to expand/collapse) -->
+                            <div class="session-toggle cursor-pointer select-none px-5 py-4 bg-indigo-50/50 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                                 <div class="flex items-start gap-3">
                                     <div class="bg-indigo-100 text-indigo-700 rounded-lg p-2.5">
                                         <i class="fas fa-clipboard-check"></i>
@@ -99,25 +98,26 @@
                                         </p>
                                     </div>
                                 </div>
-                                <div class="flex gap-2 text-xs">
+                                <div class="flex gap-2 text-xs items-center">
                                     <span class="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full font-bold">
                                         {{ $session['total_items'] }} item(s)
                                     </span>
-                                    @if ($session['total_increase'] > 0)
-                                        <span class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-full font-bold font-mono">
-                                            +{{ $session['total_increase'] }}
+                                    @if ($session['items_up'] > 0)
+                                        <span class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-full font-bold">
+                                            <i class="fas fa-arrow-up mr-0.5"></i>{{ $session['items_up'] }} naik
                                         </span>
                                     @endif
-                                    @if ($session['total_decrease'] < 0)
-                                        <span class="bg-red-50 border border-red-200 text-red-700 px-3 py-1.5 rounded-full font-bold font-mono">
-                                            {{ $session['total_decrease'] }}
+                                    @if ($session['items_down'] > 0)
+                                        <span class="bg-red-50 border border-red-200 text-red-700 px-3 py-1.5 rounded-full font-bold">
+                                            <i class="fas fa-arrow-down mr-0.5"></i>{{ $session['items_down'] }} turun
                                         </span>
                                     @endif
+                                    <i class="fas fa-chevron-down session-chevron text-gray-400 transition-transform ml-1"></i>
                                 </div>
                             </div>
 
-                            <!-- Session items -->
-                            <div class="p-5 overflow-auto">
+                            <!-- Session items (collapsed by default) -->
+                            <div class="session-body hidden border-t border-gray-100 p-5 overflow-auto">
                                 <table class="w-full text-left text-sm">
                                     <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
                                         <tr>
@@ -127,6 +127,7 @@
                                             <th class="p-3 font-bold text-center">Actual (after)</th>
                                             <th class="p-3 font-bold text-center">Δ vs System</th>
                                             <th class="p-3 font-bold text-center">Δ vs Previous</th>
+                                            <th class="p-3 font-bold w-56">Item Note</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-100">
@@ -186,6 +187,16 @@
                                                         <span class="text-gray-400">0</span>
                                                     @endif
                                                 </td>
+                                                <td class="p-3 text-gray-600 align-top">
+                                                    @if (! empty($row->item_notes))
+                                                        <div class="flex items-start gap-1 w-56 max-w-56">
+                                                            <i class="fas fa-comment-dots text-gray-400 mt-0.5 shrink-0"></i>
+                                                            <span class="min-w-0 whitespace-normal break-words">{{ $row->item_notes }}</span>
+                                                        </div>
+                                                    @else
+                                                        <span class="text-gray-300">—</span>
+                                                    @endif
+                                                </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -194,9 +205,26 @@
                         </div>
                     @endforeach
                 </div>
+
+                <div class="mt-6 pb-24">
+                    {{ $sessions->links('vendor.pagination.datatables') }}
+                </div>
             @endif
         </div>
     </main>
+
+    <script>
+        // Expand/collapse each opname session to save vertical space.
+        document.querySelectorAll('.session-toggle').forEach(function (header) {
+            header.addEventListener('click', function () {
+                var card = header.parentElement;
+                var body = card.querySelector('.session-body');
+                var chevron = header.querySelector('.session-chevron');
+                if (body) body.classList.toggle('hidden');
+                if (chevron) chevron.classList.toggle('rotate-180');
+            });
+        });
+    </script>
 
     @include('sweetalert::alert')
 </body>

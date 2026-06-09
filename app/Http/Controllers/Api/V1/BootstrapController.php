@@ -14,6 +14,7 @@ use App\Models\Category;
 use App\Models\Discount;
 use App\Models\Menu;
 use App\Models\Showcase;
+use App\Models\Station;
 use Illuminate\Http\Request;
 
 class BootstrapController extends Controller
@@ -25,8 +26,9 @@ class BootstrapController extends Controller
         $user = $request->user();
         $store = $user->store;
 
-        $menus = Menu::orderBy('name')->get();
+        $menus = Menu::with('station')->orderBy('name')->get();
         $categories = Category::orderBy('name')->get();
+        $stations = Station::where('store_id', $store->id)->orderBy('name')->get();
         $showcases = Showcase::orderBy('name')->get();
         $discounts = Discount::orderBy('name')->get();
         $chairs = $store->chairs()->orderBy('name')->get();
@@ -35,6 +37,11 @@ class BootstrapController extends Controller
         return $this->ok([
             'menus'         => MenuResource::collection($menus),
             'categories'    => CategoryResource::collection($categories),
+            'stations'      => $stations->map(fn ($s) => [
+                'id'        => $s->id,
+                'name'      => $s->name,
+                'is_active' => (bool) $s->is_active,
+            ])->values(),
             'showcases'     => ShowcaseResource::collection($showcases),
             'discounts'     => DiscountResource::collection($discounts),
             'chairs'        => ChairResource::collection($chairs),

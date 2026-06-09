@@ -15,6 +15,8 @@ class MenuResource extends JsonResource
             'price'        => (int) $this->price,
             'description'  => $this->description,
             'category_id'  => $this->category_id,
+            'station_id'   => $this->station_id,
+            'station_name' => $this->whenLoaded('station', fn () => $this->station?->name),
             'has_variety'  => (bool) $this->has_variety,
             'varieties'    => $this->varieties ?? [],
             'img'          => $this->resolveImageUrl($this->img),

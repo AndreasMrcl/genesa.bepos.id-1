@@ -13,11 +13,16 @@ class ProductController extends Controller
 {
     public function product()
     {
-        $category = Cache::remember('categories_with_menus', now()->addMinutes(60), function () {
-            return Category::with(['menus'])->get();
+        $chair = auth()->user();
+        $storeId = $chair->store_id;
+
+        $category = Cache::remember("categories_with_menus_{$storeId}", now()->addMinutes(60), function () use ($storeId) {
+            return Category::where('store_id', $storeId)
+                ->whereHas('menus')
+                ->with(['menus'])
+                ->get();
         });
 
-        $chair = auth()->user();
         $cart = Cart::getActiveOrCreateForChair($chair);
 
         return view('user.product', compact('category', 'cart'));
@@ -25,7 +30,7 @@ class ProductController extends Controller
 
     public function show($id)
     {
-        $menu = Cache::remember("menu_{$id}", now()->addMinutes(60), function () use ($id) {
+        $menu = Cache::remember("menu_detail_{$id}", now()->addMinutes(60), function () use ($id) {
             return Menu::find($id);
         });
         $discount = Cache::remember('discounts', now()->addMinutes(60), function () {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\Station;
 use App\Models\StoreConfig;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,13 +36,16 @@ class StoreConfigController extends Controller
             $config->service_percent = 0;
             $config->tax_active = false;
             $config->service_active = false;
+            $config->checker_active = false;
             $config->min_stock_alert = 5;
             $config->auto_archive_days = 30;
             $config->receipt_header = null;
             $config->receipt_footer = null;
         }
 
-        return view('storeConfig', compact('config'));
+        $stations = Station::withCount('menus')->orderBy('name')->get();
+
+        return view('storeConfig', compact('config', 'stations'));
     }
 
     public function update(Request $request)
@@ -66,6 +70,7 @@ class StoreConfigController extends Controller
                 'service_percent' => $request->service_percent,
                 'tax_active' => $request->has('tax_active'),
                 'service_active' => $request->has('service_active'),
+                'checker_active' => $request->has('checker_active'),
                 'min_stock_alert' => $request->min_stock_alert,
                 'auto_archive_days' => $request->auto_archive_days,
                 'receipt_header' => $request->receipt_header,

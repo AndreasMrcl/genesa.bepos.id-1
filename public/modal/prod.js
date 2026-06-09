@@ -18,6 +18,7 @@ $(document).ready(function () {
         $('#editName').val(btn.data('name'));
         $('#editPriceInput').val(formatRupiah(btn.data('price')));
         $('#editCategory').val(btn.data('category_id'));
+        $('#editStation').val(btn.data('station_id') || '');
         $('#editDesc').val(btn.data('desc'));
         $('#editForm').attr('action', `/product/${btn.data('id')}/update`);
 
@@ -70,12 +71,15 @@ $(document).ready(function () {
     }
 
 
-    // 👉 Saat focus → ubah ke angka polos
     $('#addPrice, #editPriceInput').on('focus', function () {
         $(this).val(parseRupiah($(this).val()));
     });
 
-    // 👉 Saat selesai input → format ke Rupiah
+    $('#addPrice, #editPriceInput').on('input', function () {
+        const digits = parseRupiah($(this).val());
+        $(this).val(digits ? Number(digits).toLocaleString('id-ID') : '');
+    });
+
     $('#addPrice, #editPriceInput').on('blur', function () {
         const numericValue = parseRupiah($(this).val());
         $(this).val(formatRupiah(numericValue));

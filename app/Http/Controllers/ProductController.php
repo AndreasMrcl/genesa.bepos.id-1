@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Discount;
 use App\Models\InventMenu;
 use App\Models\Menu;
+use App\Models\Station;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -25,14 +26,16 @@ class ProductController extends Controller
 
         $category = Category::query()->where('store_id', $userStore->id)->get();
 
+        $stations = Station::where('is_active', true)->orderBy('name')->get();
+
         $menuAll = Cache::remember($cacheKey, 180, function () use ($userStore) {
             return Menu::query()
                 ->where('store_id', $userStore->id)
-                ->with('category')
+                ->with(['category', 'station'])
                 ->get();
         });
 
-        return view('product', compact('category', 'menuAll'));
+        return view('product', compact('category', 'menuAll', 'stations'));
     }
 
     public function store(Request $request)
@@ -45,6 +48,7 @@ class ProductController extends Controller
             'img' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'description' => 'required|string|max:500',
             'category_id' => 'required|exists:categories,id,store_id,' . $userStore->id,
+            'station_id' => 'nullable|exists:stations,id,store_id,' . $userStore->id,
         ] + $this->varietyRules());
 
         $hasVariety = $request->boolean('has_variety');
@@ -60,6 +64,7 @@ class ProductController extends Controller
             'img' => 'img/' . $imageName,
             'description' => $data['description'],
             'category_id' => $data['category_id'],
+            'station_id' => $data['station_id'] ?? null,
             'store_id' => $userStore->id,
             'has_variety' => $hasVariety,
             'varieties' => $varieties,
@@ -72,14 +77,14 @@ class ProductController extends Controller
             $userStore->id
         );
 
-        $this->clearCache($userStore->id);
+        $this->clearCache($userStore->id, $menu->id);
 
         return redirect(route('product'))->with('success', 'Product successfully created!');
     }
 
     public function show($id)
     {
-        $menu = Cache::remember("menu_{$id}", now()->addMinutes(60), function () use ($id) {
+        $menu = Cache::remember("menu_detail_{$id}", now()->addMinutes(60), function () use ($id) {
             return Menu::find($id);
         });
         $discount = Cache::remember('discounts', now()->addMinutes(60), function () {
@@ -98,6 +103,7 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'description' => 'required|string|max:500',
             'category_id' => 'required|exists:categories,id,store_id,' . $userStore->id,
+            'station_id' => 'nullable|exists:stations,id,store_id,' . $userStore->id,
             'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ] + $this->varietyRules());
 
@@ -116,6 +122,7 @@ class ProductController extends Controller
             'price' => $data['price'],
             'description' => $data['description'],
             'category_id' => $data['category_id'],
+            'station_id' => $data['station_id'] ?? null,
             'has_variety' => $hasVariety,
             'varieties' => $newVarieties,
         ];
@@ -152,7 +159,7 @@ class ProductController extends Controller
             $this->logActivity('Update Product', "Update Product '{$menu->name}': " . implode(', ', $diff), $userStore->id);
         }
 
-        $this->clearCache($userStore->id);
+        $this->clearCache($userStore->id, $menu->id);
 
         $message = 'Product successfully updated!';
         if ($deletedRecipeRows > 0) {
@@ -237,15 +244,21 @@ class ProductController extends Controller
             $userStore->id
         );
 
-        $this->clearCache($userStore->id);
+        $this->clearCache($userStore->id, $menu->id);
 
         return redirect()->route('product')->with('success', 'Product successfully deleted!');
     }
 
-    private function clearCache(int $storeId): void
+    private function clearCache(int $storeId, ?int $menuId = null): void
     {
-        Cache::forget("menu_{$storeId}");
         Cache::forget("ingridient_{$storeId}");
+
+        Cache::forget("menus_{$storeId}");
+        Cache::forget("categories_with_menus_{$storeId}");
+
+        if ($menuId !== null) {
+            Cache::forget("menu_detail_{$menuId}");
+        }
     }
 
     private function logActivity($type, $description, $storeId)

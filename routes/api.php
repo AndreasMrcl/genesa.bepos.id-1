@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BootstrapController;
 use App\Http\Controllers\Api\V1\CartController;
+use App\Http\Controllers\Api\V1\CheckerController;
 use App\Http\Controllers\Api\V1\HistoryController;
 use App\Http\Controllers\Api\V1\OpenBillController;
 use App\Http\Controllers\Api\V1\OrderController;
@@ -51,6 +52,7 @@ Route::prefix('v1')->group(function () {
         Route::post('orders/{id}/archive', [OrderController::class, 'archive']);
         Route::delete('orders/{id}', [OrderController::class, 'destroy']);
         Route::get('orders/{id}/receipt', [ReceiptController::class, 'show']);
+        Route::get('orders/{id}/checker', [CheckerController::class, 'show']);
 
         // Open Bills
         Route::get('open-bills', [OpenBillController::class, 'index']);

@@ -20,6 +20,7 @@ class StockMovement extends Model
         'reference_type',
         'reference_id',
         'notes',
+        'item_notes',
     ];
 
     public function invent()

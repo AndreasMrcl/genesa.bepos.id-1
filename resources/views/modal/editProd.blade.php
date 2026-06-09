@@ -56,6 +56,20 @@
 
             @include('modal.varietyChips', ['prefix' => 'edit', 'accent' => 'blue', 'showRecipeWarning' => true])
 
+            @if (isset($stations) && $stations->isNotEmpty())
+                <div>
+                    <label for="editStation" class="block text-sm font-semibold text-gray-700 mb-2">Station</label>
+                    <select id="editStation" name="station_id"
+                        class="form-input w-full rounded-lg border-gray-300 shadow-sm p-2.5 border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        <option value="">No Station</option>
+                        @foreach ($stations as $st)
+                            <option value="{{ $st->id }}">{{ $st->name }}</option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Where this item is prepared (for order checkers).</p>
+                </div>
+            @endif
+
             <div>
                 <label for="editImage" class="block text-sm font-semibold text-gray-700 mb-2">
                     Image <span class="text-gray-400 text-xs">(opsional, kosongkan untuk pertahankan gambar lama)</span>

@@ -257,6 +257,13 @@
 
                                         <td class="p-4">
                                             <div class="flex justify-center items-center gap-2">
+                                                @if (! empty($checkerActive))
+                                                    <a href="{{ route('order-checker', ['id' => $order->id]) }}" target="_blank"
+                                                        class="w-10 h-10 flex items-center justify-center bg-amber-500 text-white rounded-lg shadow hover:bg-amber-600 hover:scale-105 transition"
+                                                        title="Print Checker">
+                                                        <i class="fas fa-utensils text-lg"></i>
+                                                    </a>
+                                                @endif
                                                 @if (in_array($order->status, [null, 'pending'], true) && $order->payment_type === 'online')
                                                     <a href="{{ route('order-resume-online', ['id' => $order->id]) }}"
                                                         class="w-10 h-10 flex items-center justify-center bg-purple-500 text-white rounded-lg shadow hover:bg-purple-600 hover:scale-105 transition"
@@ -467,6 +474,12 @@
                         class="flex-1 py-3 bg-blue-500 text-white rounded-lg font-bold hover:bg-blue-600 transition flex items-center justify-center gap-2">
                         <i class="fas fa-print"></i> Print Receipt
                     </a>
+                    @if (! empty($checkerActive))
+                        <a href="{{ route('order-checker', ['id' => $os['id']]) }}" target="_blank"
+                            class="flex-1 py-3 bg-amber-500 text-white rounded-lg font-bold hover:bg-amber-600 transition flex items-center justify-center gap-2">
+                            <i class="fas fa-utensils"></i> Print Checker
+                        </a>
+                    @endif
                     <button type="button" id="dismissOrderSuccess"
                         class="flex-1 py-3 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300 transition">
                         Done

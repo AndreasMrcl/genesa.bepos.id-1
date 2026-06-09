@@ -135,6 +135,7 @@
                                                             data-id="{{ $menu->id }}" data-name="{{ $menu->name }}"
                                                             data-price="{{ (int) $menu->price }}"
                                                             data-category_id="{{ $menu->category_id }}"
+                                                            data-station_id="{{ $menu->station_id }}"
                                                             data-desc="{{ $menu->description }}"
                                                             data-has_variety="{{ $menu->has_variety ? 1 : 0 }}"
                                                             data-varieties='@json($menu->varieties ?? [])' title="Edit">

@@ -124,11 +124,14 @@
                                         <th class="p-4 font-bold">
                                             <div class="flex items-center justify-center">System Stock</div>
                                         </th>
-                                        <th class="p-4 font-bold" width="20%">
+                                        <th class="p-4 font-bold" width="15%">
                                             <div class="flex items-center justify-center">Actual Stock</div>
                                         </th>
-                                        <th class="p-4 font-bold rounded-tr-lg" width="20%">
+                                        <th class="p-4 font-bold" width="15%">
                                             <div class="flex items-center justify-center">Delta</div>
+                                        </th>
+                                        <th class="p-4 font-bold rounded-tr-lg" width="22%">
+                                            <div class="flex items-center justify-center">Item Note</div>
                                         </th>
                                     </tr>
                                 </thead>
@@ -166,6 +169,12 @@
 
                                             <td class="p-4 text-center">
                                                 <span class="delta-preview text-gray-400 text-sm">—</span>
+                                            </td>
+
+                                            <td class="p-4">
+                                                <input type="text" name="items[{{ $idx }}][item_notes]"
+                                                    maxlength="255" placeholder="Reason for this item (optional)"
+                                                    class="w-full rounded-lg border-gray-300 shadow-sm p-2 border focus:ring-2 focus:ring-blue-500 text-sm">
                                             </td>
                                         </tr>
                                     @endforeach

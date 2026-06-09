@@ -115,11 +115,8 @@
                         </button>
                     </div>
                     <button type="submit"
-                        class="flex-1 h-12 rounded-xl bg-red-800 text-white font-bold flex items-center justify-between px-4 gap-2 active:bg-red-900">
-                        <span class="flex items-center gap-1.5">
-                            <span class="material-icons text-base">add_shopping_cart</span>
-                            Add to Cart
-                        </span>
+                        class="ml-auto h-12 rounded-xl bg-red-800 text-white font-bold flex items-center justify-center px-5 gap-2 active:bg-red-900">
+                        <span class="material-icons text-base">add_shopping_cart</span>
                         <span id="totalLabel" class="font-bold">Rp {{ number_format($menu->price, 0, ',', '.') }}</span>
                     </button>
                 </div>

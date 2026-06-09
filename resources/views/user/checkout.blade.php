@@ -123,7 +123,7 @@
             <div class="p-3">
                 <button id="pay-button" type="button" {{ empty($snapToken) ? 'disabled' : '' }}
                     class="w-full h-12 rounded-xl bg-red-800 text-white font-bold flex items-center justify-center gap-2 active:bg-red-900 {{ empty($snapToken) ? 'opacity-50 cursor-not-allowed' : '' }}">
-                    <span id="pay-button-text">Lanjut ke Snap · Rp {{ number_format($order->cart->total_amount, 0, ',', '.') }}</span>
+                    <span id="pay-button-text">Lanjut · Rp {{ number_format($order->cart->total_amount, 0, ',', '.') }}</span>
                     <span class="material-icons text-base">arrow_forward</span>
                 </button>
                 <p class="text-[10px] text-gray-400 text-center mt-2">Powered by Midtrans · Pembayaran aman</p>
@@ -159,7 +159,7 @@
 
             function resetButton() {
                 payButton.disabled = false;
-                buttonText.textContent = 'Lanjut ke Snap · Rp {{ number_format($order->cart->total_amount, 0, ',', '.') }}';
+                buttonText.textContent = 'Lanjut · Rp {{ number_format($order->cart->total_amount, 0, ',', '.') }}';
                 payButton.classList.remove('animate-pulse');
             }
         </script>

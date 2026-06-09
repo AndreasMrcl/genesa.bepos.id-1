@@ -20,6 +20,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\QrController;
 use App\Http\Controllers\SettlementController;
 use App\Http\Controllers\ShowcaseController;
+use App\Http\Controllers\StationController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\StoreConfigController;
 use App\Http\Controllers\StoreController;
@@ -85,6 +86,7 @@ Route::middleware(['auth:web,staff', 'ensure'])->group(function () {
     Route::post('/order/midtrans-confirm/{orderId}', [OrderController::class, 'midtransConfirm'])->name('midtrans-confirm');
     Route::get('/order/{id}/resume-online', [OrderController::class, 'resumeOnline'])->name('order-resume-online');
     Route::get('/order/{id}/receipt', [OrderController::class, 'receipt'])->name('order-receipt');
+    Route::get('/order/{id}/checker', [OrderController::class, 'checker'])->name('order-checker');
     Route::delete('/order/{id}/delete', [OrderController::class, 'destroy'])->name('delorder');
     Route::post('/order/{orderId}/archive', [OrderController::class, 'archive'])->name('archive');
 
@@ -103,6 +105,11 @@ Route::middleware(['auth:web,staff', 'ensure'])->group(function () {
     Route::get('/ingridient', [IngredientController::class, 'index'])->name('ingridient');
     Route::put('/ingridient/{id}/upsert', [IngredientController::class, 'upsert'])->name('upsertingridient');
     Route::delete('/ingridient/{id}/delete', [IngredientController::class, 'destroy'])->name('delingridient');
+
+    // STATION CONTROLLER (managed inside Store Config page)
+    Route::post('/poststation', [StationController::class, 'store'])->name('poststation');
+    Route::put('/station/{id}/update', [StationController::class, 'update'])->name('updatestation');
+    Route::delete('/station/{id}/delete', [StationController::class, 'destroy'])->name('delstation');
 
     // CATEGORY CONTROLLER
     Route::get('/category', [CategoryController::class, 'index'])->name('category');

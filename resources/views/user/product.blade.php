@@ -14,7 +14,7 @@
     <div class='w-full sm:max-w-sm mx-auto min-h-screen'>
 
         {{-- NAVBAR --}}
-        <div class="fixed top-0 left-0 right-0 z-50 w-full sm:max-w-sm mx-auto">
+        <div id="topNav" class="fixed top-0 left-0 right-0 z-50 w-full sm:max-w-sm mx-auto">
             <div class="bg-white shadow-lg rounded-b-[22px]">
                 {{-- Header row --}}
                 <div class="px-4 pt-4 pb-3 flex items-center gap-2">
@@ -85,7 +85,7 @@
             </div>
         </div>
 
-        <div class="h-[180px]"></div>
+        <div id="navSpacer" class="h-[180px]"></div>
 
         {{-- BODY --}}
         <div class="px-3 pb-32 space-y-5">
@@ -141,6 +141,20 @@
     </div>
 
     <script>
+
+        (function () {
+            var nav = document.getElementById('topNav');
+            var spacer = document.getElementById('navSpacer');
+            function syncSpacer() {
+                if (nav && spacer) {
+                    spacer.style.height = nav.offsetHeight + 'px';
+                }
+            }
+            syncSpacer();
+            window.addEventListener('load', syncSpacer);
+            window.addEventListener('resize', syncSpacer);
+        })();
+
         // Category filter
         document.querySelectorAll('.categoryChip').forEach(function (btn) {
             btn.addEventListener('click', function () {

@@ -125,6 +125,7 @@ class CategoryController extends Controller
     private function clearCache(int $storeId): void
     {
         Cache::forget("category_{$storeId}");
+        Cache::forget("categories_with_menus_{$storeId}");
     }
 
     private function logActivity($type, $description, $storeId)

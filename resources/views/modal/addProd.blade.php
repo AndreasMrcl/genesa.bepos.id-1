@@ -56,6 +56,20 @@
 
             @include('modal.varietyChips', ['prefix' => 'add', 'accent' => 'red'])
 
+            @if (isset($stations) && $stations->isNotEmpty())
+                <div>
+                    <label for="addStation" class="block text-sm font-semibold text-gray-700 mb-2">Station</label>
+                    <select id="addStation" name="station_id"
+                        class="form-input w-full rounded-lg border-gray-300 shadow-sm p-2.5 border focus:ring-2 focus:ring-red-500 focus:border-transparent transition">
+                        <option value="">No Station</option>
+                        @foreach ($stations as $st)
+                            <option value="{{ $st->id }}">{{ $st->name }}</option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Where this item is prepared (for order checkers).</p>
+                </div>
+            @endif
+
             <div>
                 <label for="addImage" class="block text-sm font-semibold text-gray-700 mb-2">
                     Image <span class="text-red-500">*</span>

@@ -22,6 +22,8 @@ class OrderController extends Controller
     {
         $userStore = auth()->user()->store;
 
+        $checkerActive = (bool) optional($userStore->storeConfig)->checker_active;
+
         $orders = Order::with(['cart.user', 'cart.chair', 'cart.cartMenus.menu'])->get();
 
         $openBills = Cart::openBills()
@@ -83,7 +85,7 @@ class OrderController extends Controller
             }
         }
 
-        return view('order', compact('orders', 'statuses', 'openBills'));
+        return view('order', compact('orders', 'statuses', 'openBills', 'checkerActive'));
     }
 
     public function create(Request $request)
@@ -464,6 +466,31 @@ class OrderController extends Controller
         }
 
         return view('receipt', compact('order'));
+    }
+
+    public function checker($id)
+    {
+        $order = Order::with(['cart.cartMenus.menu.station', 'cart.chair', 'store.storeConfig'])->find($id);
+
+        if (! $order) {
+            abort(404);
+        }
+
+        $config = $order->store->storeConfig;
+
+        if (! $config || ! $config->checker_active) {
+            return redirect()->route('order')->with('error', 'Checker feature is not enabled in Store Configuration.');
+        }
+
+        $groups = $order->cart->cartMenus
+            ->groupBy(function ($cm) {
+                $station = $cm->menu->station ?? null;
+
+                return $station && $station->is_active ? $station->name : 'Unassigned';
+            })
+            ->sortKeys();
+
+        return view('checker', compact('order', 'groups'));
     }
 
     public function archive($orderId)

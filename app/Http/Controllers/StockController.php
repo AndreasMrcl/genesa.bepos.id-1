@@ -6,6 +6,7 @@ use App\Models\Invent;
 use App\Models\StockMovement;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -84,8 +85,8 @@ class StockController extends Controller
                     'reason' => $first->notes ?? '-',
                     'items' => $rows->values(),
                     'total_items' => $rows->count(),
-                    'total_increase' => $rows->where('quantity', '>', 0)->sum('quantity'),
-                    'total_decrease' => $rows->where('quantity', '<', 0)->sum('quantity'),
+                    'items_up' => $rows->where('quantity', '>', 0)->count(),
+                    'items_down' => $rows->where('quantity', '<', 0)->count(),
                 ];
             })
             ->values();
@@ -100,6 +101,16 @@ class StockController extends Controller
             ];
         }
 
+        $perPage = 10;
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $sessions = new LengthAwarePaginator(
+            $sessions->forPage($page, $perPage)->values(),
+            $sessions->count(),
+            $perPage,
+            $page,
+            ['path' => LengthAwarePaginator::resolveCurrentPath()]
+        );
+
         return view('opnameHistory', compact('sessions', 'previousOpnameByInvent'));
     }
 
@@ -112,6 +123,7 @@ class StockController extends Controller
             'items' => 'required|array|min:1',
             'items.*.invent_id' => 'required|exists:invents,id',
             'items.*.actual_stock' => 'nullable|integer|min:0',
+            'items.*.item_notes' => 'nullable|string|max:255',
         ]);
 
         $invents = Invent::whereIn('id', collect($data['items'])->pluck('invent_id'))
@@ -134,10 +146,13 @@ class StockController extends Controller
                 continue;
             }
 
+            $itemNotes = isset($row['item_notes']) ? trim($row['item_notes']) : '';
+
             $changes[] = [
                 'invent' => $invent,
                 'actual_stock' => (int) $row['actual_stock'],
                 'delta' => $delta,
+                'item_notes' => $itemNotes !== '' ? $itemNotes : null,
             ];
         }
 
@@ -158,6 +173,7 @@ class StockController extends Controller
                     'stock_before' => $stockBefore,
                     'type' => 'manual_adjust',
                     'notes' => $data['reason'],
+                    'item_notes' => $change['item_notes'],
                 ]);
             }
         });

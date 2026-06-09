@@ -16,6 +16,7 @@ class StoreConfig extends Model
         'service_percent',
         'tax_active',
         'service_active',
+        'checker_active',
         'min_stock_alert',
         'auto_archive_days',
         'receipt_header',
@@ -27,6 +28,7 @@ class StoreConfig extends Model
         'service_percent' => 'decimal:2',
         'tax_active' => 'boolean',
         'service_active' => 'boolean',
+        'checker_active' => 'boolean',
         'min_stock_alert' => 'integer',
         'auto_archive_days' => 'integer',
     ];

@@ -17,6 +17,7 @@ class Menu extends Model
             'img',
             'description',
             'category_id',
+            'station_id',
             'has_variety',
             'varieties',
         ];
@@ -39,6 +40,11 @@ class Menu extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function station()
+    {
+        return $this->belongsTo(Station::class);
     }
 
     public function invents()
