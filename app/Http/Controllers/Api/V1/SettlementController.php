@@ -63,6 +63,7 @@ class SettlementController extends Controller
             return $this->error('shift', 'Shift sebelumnya belum ditutup.', 409);
         }
 
+        $data['store_id'] = $user->store->id;
         $data['start_time'] = Carbon::now()->toDateTimeString();
         $data['expected'] = $data['start_amount'] ?? 0;
 
