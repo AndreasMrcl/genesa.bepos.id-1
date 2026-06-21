@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\V1\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\SettlementResource;
-use App\Models\Cart;
 use App\Models\Settlement;
 use App\Services\ActivityLogger;
 use Carbon\Carbon;
@@ -90,15 +89,6 @@ class SettlementController extends Controller
         $active = $user->settlements()->active()->first();
         if (! $active) {
             return $this->error('shift', 'Tidak ada shift aktif.', 409);
-        }
-
-        $openBillCount = Cart::openBills()->where('store_id', $storeId)->count();
-        if ($openBillCount > 0) {
-            return $this->error(
-                'open_bills',
-                "Tidak bisa tutup shift: masih ada {$openBillCount} open bill. Selesaikan atau cancel dulu.",
-                409
-            );
         }
 
         $data['end_time'] = Carbon::now()->toDateTimeString();

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
-use App\Models\Cart;
 use App\Models\Settlement;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -74,11 +73,6 @@ class SettlementController extends Controller
 
         if (! $activeShift) {
             return redirect(route('settlement'))->with('error', 'There is no active shift that can be closed.');
-        }
-
-        $openBillCount = Cart::openBills()->where('store_id', $userStore->id)->count();
-        if ($openBillCount > 0) {
-            return redirect(route('settlement'))->with('error', "Cannot close shift: there are still {$openBillCount} open bills. Please settle or cancel them first on the Order page.");
         }
 
         $data['end_time'] = Carbon::now()->toDateTimeString();
