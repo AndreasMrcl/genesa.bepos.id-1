@@ -1,0 +1,548 @@
+{
+  "info": {
+    "name": "Leavy Cashier API v1",
+    "description": "API untuk aplikasi kasir mobile (Flutter). Login dulu — token akan otomatis tersimpan di collection variable `token`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "leavy-cashier-api-v1"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "device_name", "value": "Postman Test Device", "type": "string" },
+    { "key": "email", "value": "owner@example.com", "type": "string" },
+    { "key": "password", "value": "password", "type": "string" },
+    { "key": "cart_id", "value": "", "type": "string" },
+    { "key": "cart_item_id", "value": "", "type": "string" },
+    { "key": "order_id", "value": "", "type": "string" },
+    { "key": "history_id", "value": "", "type": "string" },
+    { "key": "settlement_id", "value": "", "type": "string" },
+    { "key": "chair_id", "value": "1", "type": "string" },
+    { "key": "menu_id", "value": "1", "type": "string" },
+    { "key": "discount_id", "value": "", "type": "string" },
+    { "key": "device_id", "value": "", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Default Accept header untuk semua request",
+          "pm.request.headers.upsert({ key: 'Accept', value: 'application/json' });"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data && json.data.token) {",
+                  "    pm.collectionVariables.set('token', json.data.token);",
+                  "    console.log('Token saved:', json.data.token.substring(0,20) + '...');",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/auth/login", "host": ["{{base_url}}"], "path": ["api","v1","auth","login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"device_name\": \"{{device_name}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/auth/me", "host": ["{{base_url}}"], "path": ["api","v1","auth","me"] }
+          }
+        },
+        {
+          "name": "List devices",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/auth/devices", "host": ["{{base_url}}"], "path": ["api","v1","auth","devices"] }
+          }
+        },
+        {
+          "name": "Revoke device",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/api/v1/auth/devices/{{device_id}}", "host": ["{{base_url}}"], "path": ["api","v1","auth","devices","{{device_id}}"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/api/v1/auth/logout", "host": ["{{base_url}}"], "path": ["api","v1","auth","logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Master / Bootstrap",
+      "item": [
+        {
+          "name": "Bootstrap (all master data)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/bootstrap", "host": ["{{base_url}}"], "path": ["api","v1","bootstrap"] }
+          }
+        },
+        {
+          "name": "Store config",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/store-config", "host": ["{{base_url}}"], "path": ["api","v1","store-config"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Get cart (current draft)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data && json.data.cart) {",
+                  "    pm.collectionVariables.set('cart_id', json.data.cart.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/cart", "host": ["{{base_url}}"], "path": ["api","v1","cart"] }
+          }
+        },
+        {
+          "name": "Get specific cart (open-bill)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/cart?cart_id={{cart_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","cart"],
+              "query": [{ "key": "cart_id", "value": "{{cart_id}}" }]
+            }
+          }
+        },
+        {
+          "name": "Add item to cart",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const items = json.data && json.data.cart && json.data.cart.items;",
+                  "  if (items && items.length > 0) {",
+                  "    pm.collectionVariables.set('cart_item_id', items[items.length-1].id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/cart/items", "host": ["{{base_url}}"], "path": ["api","v1","cart","items"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"menu_id\": {{menu_id}},\n  \"quantity\": 2,\n  \"variety\": null,\n  \"notes\": \"sample notes\",\n  \"discount_id\": null,\n  \"cart_id\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "Update cart item",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/cart/items/{{cart_item_id}}", "host": ["{{base_url}}"], "path": ["api","v1","cart","items","{{cart_item_id}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 3,\n  \"notes\": \"updated notes\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete cart item",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/api/v1/cart/items/{{cart_item_id}}", "host": ["{{base_url}}"], "path": ["api","v1","cart","items","{{cart_item_id}}"] }
+          }
+        },
+        {
+          "name": "Reset cart (delete all items)",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/api/v1/cart", "host": ["{{base_url}}"], "path": ["api","v1","cart"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Order",
+      "item": [
+        {
+          "name": "List orders (active table)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/orders", "host": ["{{base_url}}"], "path": ["api","v1","orders"] }
+          }
+        },
+        {
+          "name": "Get order detail",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["api","v1","orders","{{order_id}}"] }
+          }
+        },
+        {
+          "name": "Sync Midtrans status (pull-to-refresh)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/api/v1/orders/sync-status", "host": ["{{base_url}}"], "path": ["api","v1","orders","sync-status"] }
+          }
+        },
+        {
+          "name": "Checkout (cash)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data && json.data.order) {",
+                  "    pm.collectionVariables.set('order_id', json.data.order.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/orders/checkout", "host": ["{{base_url}}"], "path": ["api","v1","orders","checkout"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"cash\",\n  \"cash_received\": 50000,\n  \"cart_id\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "Checkout (EDC)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/orders/checkout", "host": ["{{base_url}}"], "path": ["api","v1","orders","checkout"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"edc\",\n  \"payment_reference\": \"EDC-REF-12345\",\n  \"cart_id\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "Checkout (online → returns snap_token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data && json.data.order) {",
+                  "    pm.collectionVariables.set('order_id', json.data.order.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/orders/checkout", "host": ["{{base_url}}"], "path": ["api","v1","orders","checkout"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"online\",\n  \"cart_id\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "Confirm online (after Flutter SDK callback)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/api/v1/orders/{{order_id}}/confirm-online", "host": ["{{base_url}}"], "path": ["api","v1","orders","{{order_id}}","confirm-online"] }
+          }
+        },
+        {
+          "name": "Resume online (generate new snap_token)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/api/v1/orders/{{order_id}}/resume-online", "host": ["{{base_url}}"], "path": ["api","v1","orders","{{order_id}}","resume-online"] }
+          }
+        },
+        {
+          "name": "Cancel online (unlock cart) [new 2026-07-02]",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/api/v1/orders/{{order_id}}/cancel-online", "host": ["{{base_url}}"], "path": ["api","v1","orders","{{order_id}}","cancel-online"] }
+          }
+        },
+        {
+          "name": "Archive order (move to history)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/api/v1/orders/{{order_id}}/archive", "host": ["{{base_url}}"], "path": ["api","v1","orders","{{order_id}}","archive"] }
+          }
+        },
+        {
+          "name": "Delete order (restore stock)",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/api/v1/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["api","v1","orders","{{order_id}}"] }
+          }
+        },
+        {
+          "name": "Receipt (data terstruktur untuk ESC/POS)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/orders/{{order_id}}/receipt", "host": ["{{base_url}}"], "path": ["api","v1","orders","{{order_id}}","receipt"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Open Bill",
+      "item": [
+        {
+          "name": "List open bills",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/open-bills", "host": ["{{base_url}}"], "path": ["api","v1","open-bills"] }
+          }
+        },
+        {
+          "name": "Open bill (assign cart to chair)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/open-bills", "host": ["{{base_url}}"], "path": ["api","v1","open-bills"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chair_id\": {{chair_id}},\n  \"cart_id\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "Cancel open bill",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/api/v1/open-bills/{{cart_id}}", "host": ["{{base_url}}"], "path": ["api","v1","open-bills","{{cart_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "History",
+      "item": [
+        {
+          "name": "List history (paginated)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data && json.data.length > 0) {",
+                  "    pm.collectionVariables.set('history_id', json.data[0].id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/history?page=1&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","history"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "History detail",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/history/{{history_id}}", "host": ["{{base_url}}"], "path": ["api","v1","history","{{history_id}}"] }
+          }
+        },
+        {
+          "name": "Export (returns signed URL)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/export?month=5",
+              "host": ["{{base_url}}"],
+              "path": ["api","v1","history","export"],
+              "query": [{ "key": "month", "value": "5" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Settlement",
+      "item": [
+        {
+          "name": "List settlements",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/settlements", "host": ["{{base_url}}"], "path": ["api","v1","settlements"] }
+          }
+        },
+        {
+          "name": "Active shift",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data && json.data.settlement) {",
+                  "    pm.collectionVariables.set('settlement_id', json.data.settlement.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/settlements/active", "host": ["{{base_url}}"], "path": ["api","v1","settlements","active"] }
+          }
+        },
+        {
+          "name": "Settlement detail (with histories)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/settlements/{{settlement_id}}", "host": ["{{base_url}}"], "path": ["api","v1","settlements","{{settlement_id}}"] }
+          }
+        },
+        {
+          "name": "Start shift",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data && json.data.settlement) {",
+                  "    pm.collectionVariables.set('settlement_id', json.data.settlement.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/settlements/start", "host": ["{{base_url}}"], "path": ["api","v1","settlements","start"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_amount\": 100000\n}"
+            }
+          }
+        },
+        {
+          "name": "Close shift",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/settlements/close", "host": ["{{base_url}}"], "path": ["api","v1","settlements","close"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"total_amount\": 250000\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete settlement",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/api/v1/settlements/{{settlement_id}}", "host": ["{{base_url}}"], "path": ["api","v1","settlements","{{settlement_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhook (Midtrans)",
+      "item": [
+        {
+          "name": "Midtrans notification (manual trigger for testing)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/webhooks/midtrans", "host": ["{{base_url}}"], "path": ["api","v1","webhooks","midtrans"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": \"ORDER-ABC12345\",\n  \"status_code\": \"200\",\n  \"gross_amount\": \"25000.00\",\n  \"signature_key\": \"<sha512(order_id + status_code + gross_amount + server_key)>\",\n  \"transaction_status\": \"settlement\",\n  \"transaction_id\": \"midtrans-txn-id-xxx\",\n  \"fraud_status\": \"accept\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

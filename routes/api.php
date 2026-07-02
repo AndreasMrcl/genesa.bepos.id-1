@@ -49,6 +49,7 @@ Route::prefix('v1')->group(function () {
         Route::get('orders/{id}', [OrderController::class, 'show']);
         Route::post('orders/{id}/confirm-online', [OrderController::class, 'confirmOnline']);
         Route::post('orders/{id}/resume-online', [OrderController::class, 'resumeOnline']);
+        Route::post('orders/{id}/cancel-online', [OrderController::class, 'cancelOnline']);
         Route::post('orders/{id}/archive', [OrderController::class, 'archive']);
         Route::delete('orders/{id}', [OrderController::class, 'destroy']);
         Route::get('orders/{id}/receipt', [ReceiptController::class, 'show']);

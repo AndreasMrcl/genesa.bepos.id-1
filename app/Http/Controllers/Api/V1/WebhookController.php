@@ -58,6 +58,14 @@ class WebhookController extends Controller
                 $finalStatus = 'settlement';
             }
 
+            // A6: order yang sudah settle/capture bersifat final. Abaikan notifikasi non-final
+            // yang datang belakangan (mis. 'expire' telat/duplikat) supaya order tidak terhapus
+            // dan stok yang sudah dipotong tidak hilang.
+            if (in_array($order->status, ['settlement', 'capture'], true)
+                && ! in_array($finalStatus, ['settlement', 'capture'], true)) {
+                return;
+            }
+
             $order->update([
                 'status'            => $finalStatus,
                 'payment_reference' => $transactionId ?? $order->payment_reference,

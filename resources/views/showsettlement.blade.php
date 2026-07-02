@@ -109,11 +109,54 @@
                 </div>
             </div>
 
+            <!-- Payment Method Breakdown -->
+            <div class="w-full bg-white rounded-xl shadow-md border border-gray-100">
+                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl flex items-center justify-between">
+                    <h2 class="font-bold text-gray-800 flex items-center gap-2 text-base">
+                        <i class="fas fa-wallet text-gray-500"></i> Payment Breakdown
+                    </h2>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-500 uppercase font-bold">Grand Total</p>
+                        <p class="font-mono font-bold text-emerald-700 text-lg">
+                            Rp {{ number_format($grandTotal, 0, ',', '.') }}</p>
+                    </div>
+                </div>
+
+                <div class="p-5">
+                    @if ($paymentBreakdown->isEmpty())
+                        <p class="text-sm text-gray-500 text-center py-4">No completed orders in this shift.</p>
+                    @else
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            @foreach ($paymentBreakdown as $type => $data)
+                                @php
+                                    $pct = $grandTotal > 0 ? round(($data['total'] / $grandTotal) * 100) : 0;
+                                @endphp
+                                <div class="border border-gray-100 rounded-xl p-4 bg-gray-50">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span
+                                            class="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full font-bold border border-gray-200 uppercase">
+                                            {{ $type }}
+                                        </span>
+                                        <span class="text-xs text-gray-500 font-bold">{{ $data['count'] }} order</span>
+                                    </div>
+                                    <p class="font-mono font-bold text-gray-800 text-lg">
+                                        Rp {{ number_format($data['total'], 0, ',', '.') }}</p>
+                                    <div class="mt-2 h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                                        <div class="h-full bg-emerald-500 rounded-full" style="width: {{ $pct }}%"></div>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mt-1">{{ $pct }}% of total</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+
             <!-- Table Section -->
             <div class="w-full bg-white rounded-xl shadow-md border border-gray-100">
                 <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl">
                     <h2 class="font-bold text-gray-800 flex items-center gap-2 text-base">
-                        <i class="fas fa-list text-gray-500"></i> Transactions
+                        <i class="fas fa-list text-gray-500"></i> Completed Orders
                         <span
                             class="ml-1 bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full font-bold border border-gray-200">
                             {{ $settlement->histories->count() }} Items

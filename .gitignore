@@ -27,3 +27,8 @@ Thumbs.db
 AGENTS.md
 PERUBAHAN.md
 AGENTS.md
+
+# Local-only feature tests
+/tests/Feature/CartLockPendingOnlineTest.php
+/tests/Feature/CartOrderAuditFixTest.php
+/tests/Feature/AuditFixA6A7Test.php

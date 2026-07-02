@@ -69,6 +69,21 @@ class Cart extends Model
         $this->update(['expires_at' => now()->addMinutes(self::EXPIRATION_MINUTES)]);
     }
 
+    /**
+     * Pending online order yang mengunci cart ini (belum settle/gagal).
+     * Selama ini ada, cart tidak boleh diubah.
+     */
+    public function pendingOnlineOrder(): ?Order
+    {
+        return $this->orders()
+            ->where('payment_type', 'online')
+            ->where(function ($query) {
+                $query->whereNull('status')->orWhere('status', 'pending');
+            })
+            ->latest('id')
+            ->first();
+    }
+
     public function store()
     {
         return $this->belongsTo(Store::class);

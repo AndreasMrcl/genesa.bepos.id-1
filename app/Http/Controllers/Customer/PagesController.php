@@ -50,8 +50,19 @@ class PagesController extends Controller
 
     public function antrian()
     {
-        $orders = Order::with(['cart.user', 'cart.chair', 'cart.cartMenus.menu'])->get();
+        $chair = auth()->user();
+
+        // A5: scope ke store milik chair (hindari bocor lintas-store) & urutkan terbaru.
+        $orders = Order::with(['cart.user', 'cart.chair', 'cart.cartMenus.menu'])
+            ->where('store_id', $chair->store_id)
+            ->latest()
+            ->get();
+
         $statuses = [];
+
+        // A5: status terminal tidak perlu di-poll ulang ke Midtrans (tak akan berubah lagi) —
+        // hemat panggilan jaringan & hindari re-consume/re-delete di request GET.
+        $terminal = ['settlement', 'capture', 'expire', 'deny', 'cancel'];
 
         foreach ($orders as $order) {
             try {
@@ -61,6 +72,15 @@ class PagesController extends Controller
                         'bg_color' => 'text-white text-center bg-green-500 w-fit rounded-xl'
                     ];
                     continue; // Skip further processing for this order
+                }
+
+                if (in_array($order->status, $terminal, true)) {
+                    $isGreen = in_array($order->status, ['settlement', 'capture'], true);
+                    $statuses[$order->no_order] = (object) [
+                        'status' => $order->status,
+                        'bg_color' => ($isGreen ? 'bg-green-500' : 'bg-red-500').' text-white text-center w-fit rounded-xl',
+                    ];
+                    continue;
                 }
 
                 if (! config('midtrans.server_key')) {

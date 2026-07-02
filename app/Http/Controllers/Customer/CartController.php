@@ -62,6 +62,9 @@ class CartController extends Controller
             }
         }
 
+        // A2: bulatkan ke rupiah utuh (Rupiah tak punya sen).
+        $subtotal = (int) round($subtotal);
+
         $existingCartMenu = CartMenu::where('cart_id', $cart->id)
             ->where('menu_id', $menu->id)
             ->where('variety', $variety)

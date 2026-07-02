@@ -86,7 +86,7 @@ class SettlementController extends Controller
 
         $this->clearCache($userStore->id);
 
-        Cache::forget("settlement_{$activeShift->id}");
+        Cache::forget("settlement_detail_{$activeShift->id}");
 
         return redirect(route('settlement'))->with('success', 'Shift ended successfully!');
     }
@@ -94,12 +94,27 @@ class SettlementController extends Controller
     public function show($id)
     {
         $settlement = Cache::remember(
-            "settlement_{$id}",
+            "settlement_detail_{$id}",
             now()->addMinutes(60),
-            fn() => Settlement::with('history')->findOrFail($id)
+            fn() => Settlement::with([
+                'user',
+                'histories' => fn($q) => $q->where('status', 'settlement')->orderBy('created_at'),
+            ])->findOrFail($id)
         );
 
-        return view('showsettlement', compact('settlement'));
+        $histories = $settlement->histories;
+
+        $paymentBreakdown = $histories
+            ->groupBy(fn($h) => $h->payment_type ?: 'unknown')
+            ->map(fn($group) => [
+                'count' => $group->count(),
+                'total' => $group->sum('total_amount'),
+            ])
+            ->sortKeys();
+
+        $grandTotal = $histories->sum('total_amount');
+
+        return view('showsettlement', compact('settlement', 'paymentBreakdown', 'grandTotal'));
     }
 
     public function destroy($id)
@@ -116,7 +131,7 @@ class SettlementController extends Controller
         );
 
         $this->clearCache($userStore->id);
-        Cache::forget("settlement_{$id}");
+        Cache::forget("settlement_detail_{$id}");
 
         return redirect(route('settlement'))->with('success', 'Settlement deleted successfully!');
     }

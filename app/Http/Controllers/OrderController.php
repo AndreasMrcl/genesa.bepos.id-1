@@ -538,6 +538,8 @@ class OrderController extends Controller
             $settlement->expected = $cashHistoryTotal + $settlement->start_amount;
             $settlement->save();
 
+            Cache::forget("settlement_detail_{$settlement->id}");
+
             foreach ($order->cart->cartMenus as $cartMenu) {
                 $cartMenu->delete();
             }

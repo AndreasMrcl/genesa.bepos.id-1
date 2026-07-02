@@ -10,7 +10,9 @@ use App\Models\CartMenu;
 use App\Models\Discount;
 use App\Models\Menu;
 use App\Services\InventoryService;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
@@ -40,6 +42,10 @@ class CartController extends Controller
 
         $cart = $this->resolveCart($request);
 
+        if ($locked = $this->lockedResponse($cart)) {
+            return $locked;
+        }
+
         $menu = Menu::findOrFail($data['menu_id']);
         $quantity = (int) $data['quantity'];
 
@@ -64,6 +70,9 @@ class CartController extends Controller
         if ($discount) {
             $subtotal -= $subtotal * ($discount->percentage / 100);
         }
+
+        // A2: bulatkan ke rupiah utuh (Rupiah tak punya sen) supaya nilai tersimpan = nilai ditagih.
+        $subtotal = (int) round($subtotal);
 
         $existing = CartMenu::where([
             'cart_id'     => $cart->id,
@@ -110,6 +119,11 @@ class CartController extends Controller
 
         $cartMenu = CartMenu::where('id', $id)->where('store_id', $storeId)->firstOrFail();
         $cart = $cartMenu->cart;
+
+        if ($locked = $this->lockedResponse($cart)) {
+            return $locked;
+        }
+
         $menu = $cartMenu->menu;
 
         $quantity = (int) ($data['quantity'] ?? $cartMenu->quantity);
@@ -132,6 +146,8 @@ class CartController extends Controller
         if ($discount) {
             $newSubtotal -= $newSubtotal * ($discount->percentage / 100);
         }
+        // A2: bulatkan ke rupiah utuh.
+        $newSubtotal = (int) round($newSubtotal);
 
         DB::transaction(function () use ($cart, $cartMenu, $quantity, $variety, $notes, $discount, $newSubtotal) {
             $delta = $newSubtotal - $cartMenu->subtotal;
@@ -157,6 +173,10 @@ class CartController extends Controller
         $cartMenu = CartMenu::where('id', $id)->where('store_id', $storeId)->firstOrFail();
         $cart = $cartMenu->cart;
 
+        if ($locked = $this->lockedResponse($cart)) {
+            return $locked;
+        }
+
         DB::transaction(function () use ($cartMenu, $cart) {
             $subtotal = $cartMenu->subtotal;
             $cartMenu->delete();
@@ -172,6 +192,10 @@ class CartController extends Controller
     {
         $cart = $this->resolveCart($request);
 
+        if ($locked = $this->lockedResponse($cart)) {
+            return $locked;
+        }
+
         DB::transaction(function () use ($cart) {
             $cart->cartMenus()->delete();
             $cart->update(['total_amount' => 0]);
@@ -180,6 +204,23 @@ class CartController extends Controller
         return $this->ok([
             'cart' => new CartResource($cart->fresh()->load('cartMenus.menu', 'cartMenus.discount', 'chair')),
         ]);
+    }
+
+    /**
+     * Tolak mutasi kalau cart punya pending online order.
+     * User harus selesaikan / batalkan pembayaran dulu.
+     */
+    private function lockedResponse(Cart $cart)
+    {
+        if ($cart->pendingOnlineOrder()) {
+            return $this->error(
+                'payment_pending',
+                'Ada pembayaran online yang belum selesai untuk keranjang ini. Selesaikan atau batalkan pembayaran dulu.',
+                409
+            );
+        }
+
+        return null;
     }
 
     /**
@@ -212,13 +253,39 @@ class CartController extends Controller
             : false;
 
         if (! $cart || $hasCommittedOrder) {
-            $cart = $user->carts()->create([
-                'store_id'     => $storeId,
-                'total_amount' => 0,
-            ]);
-            $cart->load('cartMenus.menu', 'cartMenus.discount', 'chair');
+            $cart = $this->createDraftCartSafely($user, $storeId);
         }
 
         return $cart;
+    }
+
+    /**
+     * A3: buat draft cart baru dengan lock agar request paralel (double-tap / retry)
+     * tidak menghasilkan cart ganda. Re-check di dalam lock; kalau lock timeout,
+     * fallback ke pembuatan biasa supaya user tidak pernah terblokir.
+     */
+    private function createDraftCartSafely($user, int $storeId): Cart
+    {
+        $make = function () use ($user, $storeId): Cart {
+            $cart = $user->carts()->where('is_open_bill', false)->latest()->first();
+            $hasCommitted = $cart ? $cart->orders()->whereNotNull('status')->exists() : false;
+
+            if (! $cart || $hasCommitted) {
+                $cart = $user->carts()->create([
+                    'store_id'     => $storeId,
+                    'total_amount' => 0,
+                ]);
+            }
+
+            return $cart;
+        };
+
+        try {
+            $cart = Cache::lock("resolve-cart-user-{$user->id}", 10)->block(5, $make);
+        } catch (LockTimeoutException $e) {
+            $cart = $make();
+        }
+
+        return $cart->load('cartMenus.menu', 'cartMenus.discount', 'chair');
     }
 }
