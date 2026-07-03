@@ -20,6 +20,11 @@ class Settlement extends Model
             'expected',
         ];
 
+    protected $casts = [
+        'start_time' => 'datetime',
+        'end_time'   => 'datetime',
+    ];
+
     public function store()
     {
         return $this->belongsTo(Store::class);
